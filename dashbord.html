@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Falagav Cricket Pro</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --text-color: #ffffff;
+            --primary: #4CAF50;
+            --danger: #f44336;
+            --warning: #ff9800;
+            --info: #2196F3;
+            --surface: #1e1e1e;
+        }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-sizing: border-box;
+            overscroll-behavior-y: contain; 
+        }
+        
+        /* --- SETUP SCREEN STYLES --- */
+        #setup-screen {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background-color: var(--surface);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            margin-top: 10px;
+        }
+        .setup-title {
+            text-align: center;
+            color: var(--primary);
+            margin-top: 0;
+            margin-bottom: 5px;
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        label {
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+        input, select {
+            background-color: #121212;
+            color: white;
+            border: 1px solid #444;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        .setup-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        /* --- COIN TOSS STYLES --- */
+        .toss-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #1a1a1a;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px dashed #555;
+            margin-top: 5px;
+        }
+        .coin {
+            width: 60px;
+            height: 60px;
+            background-color: var(--warning);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: #121212;
+            box-shadow: 0 4px 10px rgba(255, 152, 0, 0.4);
+            margin-bottom: 15px;
+            transform-style: preserve-3d;
+        }
+        /* The CSS animation that spins the coin */
+        @keyframes flipAnimation {
+            0% { transform: rotateY(0deg) scale(1); }
+            50% { transform: rotateY(900deg) scale(1.5); } /* Pops out and spins */
+            100% { transform: rotateY(1800deg) scale(1); }
+        }
+        .btn-toss {
+            background-color: transparent;
+            color: var(--warning);
+            border: 2px solid var(--warning);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            width: auto;
+        }
+        .toss-result-text {
+            margin-top: 10px;
+            font-weight: bold;
+            color: var(--primary);
+            min-height: 20px;
+            text-align: center;
+        }
+
+        .btn-start {
+            background-color: var(--primary);
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 10px;
+            cursor: pointer;
+            display: none; /* Hidden until toss happens */
+        }
+
+        /* --- SCOREBOARD STYLES --- */
+        #scoreboard-screen {
+            display: none; 
+            flex-direction: column;
+            height: 100%;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+        .scoreboard {
+            background-color: var(--surface);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .batting-team {
+            font-size: 1.2rem;
+            color: var(--primary);
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .score {
+            font-size: 4.5rem;
+            font-weight: bold;
+            margin: 0;
+            line-height: 1;
+        }
+        .overs {
+            font-size: 1.5rem;
+            color: #aaa;
+            margin-top: 10px;
+        }
+        .target-box {
+            background-color: #2c2c2c;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none; 
+        }
+        .target-text {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: var(--warning);
+        }
+        .progress-container {
+            width: 100%;
+            background-color: #121212;
+            border-radius: 6px;
+            height: 12px;
+            overflow: hidden;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: var(--warning);
+            width: 0%;
+            transition: width 0.4s ease-in-out, background-color 0.4s;
+        }
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            flex-grow: 1;
+        }
+        button {
+            background-color: var(--surface);
+            color: var(--text-color);
+            border: 2px solid #333;
+            border-radius: 12px;
+            font-size: 1.4rem;
+            font-weight: bold;
+            cursor: pointer;
+            touch-action: manipulation; 
+            transition: opacity 0.2s;
+        }
+        button:active:not(:disabled) {
+            background-color: #333;
+            transform: scale(0.95);
+        }
+        button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            border-color: #333 !important;
+            color: #666 !important;
+        }
+        .btn-run { color: var(--primary); border-color: var(--primary); }
+        .btn-wicket { color: var(--danger); border-color: var(--danger); }
+        .btn-extra { color: var(--warning); border-color: var(--warning); }
+        .footer-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .footer-controls button {
+            font-size: 1rem;
+            padding: 12px 0;
+            border-color: #666;
+        }
+        .btn-danger { color: var(--danger); border-color: var(--danger); }
+    </style>
+</head>
+<body>
+
+    <!-- SETUP SCREEN -->
+    <div id="setup-screen">
+        <h2 class="setup-title">Match Setup</h2>
+        
+        <div class="setup-row">
+            <div class="input-group">
+                <label>Team 1 Name</label>
+                <input type="text" id="teamA" value="Team 1">
+            </div>
+            <div class="input-group">
+                <label>Team 2 Name</label>
+                <input type="text" id="teamB" value="Team 2">
+            </div>
+        </div>
+
+        <div class="setup-row">
+            <div class="input-group">
+                <label>Total Overs</label>
+                <input type="number" id="setup-overs" value="5" min="1">
+            </div>
+            <div class="input-group">
+                <label>Total Wickets</label>
+                <input type="number" id="setup-wickets" value="10" min="1">
+            </div>
+        </div>
+
+        <!-- NEW: COIN TOSS SECTION -->
+        <div class="toss-section">
+            <div class="coin" id="coin">🏏</div>
+            <button class="btn-toss" id="btn-toss-action" onclick="tossCoin()">Flip Coin</button>
+            <div class="toss-result-text" id="toss-result-text">Who will win the toss?</div>
+            
+            <!-- Hidden until coin is flipped -->
+            <div class="input-group" id="decision-box" style="display: none; width: 100%; margin-top: 15px;">
+                <label id="decision-label" style="text-align: center; color: white;">Decision</label>
+                <select id="toss-decision" style="text-align: center;">
+                    <option value="bat">Bat First</option>
+                    <option value="bowl">Bowl First</option>
+                </select>
+            </div>
+        </div>
+
+        <button class="btn-start" id="btn-start-match" onclick="startMatch()">Start Match</button>
+    </div>
+
+    <!-- MAIN SCOREBOARD SCREEN -->
+    <div id="scoreboard-screen">
+        <div class="header">
+            <span id="match-rules">5 Overs | 10 Wickets</span>
+            <span id="match-toss-result" style="color: var(--warning);">Toss Data</span>
+        </div>
+
+        <div class="scoreboard">
+            <div class="batting-team" id="batting-team">Team Batting</div>
+            <div class="score"><span id="runs">0</span> - <span id="wickets">0</span></div>
+            <div class="overs">Overs: <span id="overs">0.0</span> / <span id="max-overs-display">5</span></div>
+            
+            <div class="target-box" id="target-box">
+                <div class="target-text" id="target-info">Target: --</div>
+                <div class="progress-container">
+                    <div class="progress-bar" id="progress-bar"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls" id="scoring-controls">
+            <button class="btn-run" onclick="addEvent(0, true, 0)">Dot</button>
+            <button class="btn-run" onclick="addEvent(1, true, 0)">1</button>
+            <button class="btn-run" onclick="addEvent(2, true, 0)">2</button>
+            <button class="btn-run" onclick="addEvent(3, true, 0)">3</button>
+            <button class="btn-run" onclick="addEvent(4, true, 0)">4</button>
+            <button class="btn-run" onclick="addEvent(6, true, 0)">6</button>
+            
+            <button class="btn-extra" onclick="addEvent(1, false, 0)">Wide</button>
+            <button class="btn-extra" onclick="addEvent(1, false, 0)">No Ball</button>
+            <button class="btn-wicket" onclick="addEvent(0, true, 1)">Out!</button>
+        </div>
+
+        <div class="footer-controls">
+            <button onclick="undo()">Undo ↩</button>
+            <button id="btn-switch" onclick="switchInnings(false)" style="color: var(--info);">End Innings</button>
+            <button class="btn-danger" onclick="resetApp()">New Match</button>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'gullyCricketMatch';
+        let state = loadState() || getInitialState();
+        let actualTossWinnerKey = null; // 'teamA' or 'teamB'
+
+        function getInitialState() {
+            return {
+                matchStarted: false,
+                batFirst: "",
+                bowlFirst: "",
+                tossString: "",
+                maxOvers: 5,
+                maxWickets: 10,
+                innings: 1, 
+                i1: { runs: 0, wickets: 0, validBalls: 0 },
+                i2: { runs: 0, wickets: 0, validBalls: 0 },
+                history: []
+            };
+        }
+
+        function loadState() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            return saved ? JSON.parse(saved) : null;
+        }
+
+        function saveState() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+
+        // --- NEW: COIN TOSS LOGIC ---
+        function tossCoin() {
+            let tA = document.getElementById('teamA').value.trim() || 'Team 1';
+            let tB = document.getElementById('teamB').value.trim() || 'Team 2';
+            let coin = document.getElementById('coin');
+            let resultText = document.getElementById('toss-result-text');
+            let tossBtn = document.getElementById('btn-toss-action');
+            let decisionBox = document.getElementById('decision-box');
+            let startBtn = document.getElementById('btn-start-match');
+
+            // Reset UI for animation
+            tossBtn.disabled = true;
+            decisionBox.style.display = 'none';
+            startBtn.style.display = 'none';
+            resultText.innerText = "Flipping...";
+            resultText.style.color = "var(--text-color)";
+            
+            // Trigger CSS Animation
+            coin.style.animation = 'none';
+            coin.offsetHeight; /* trigger reflow */
+            coin.style.animation = 'flipAnimation 1.5s ease-out forwards';
+
+            // Wait for animation to finish
+            setTimeout(() => {
+                // Randomly pick winner
+                let isTeamA = Math.random() < 0.5;
+                actualTossWinnerKey = isTeamA ? 'teamA' : 'teamB';
+                let winnerName = isTeamA ? tA : tB;
+                
+                // Show Result
+                resultText.innerText = `🎉 ${winnerName} won the toss!`;
+                resultText.style.color = "var(--primary)";
+                
+                // Show decision dropdown
+                document.getElementById('decision-label').innerText = `What will ${winnerName} do?`;
+                decisionBox.style.display = 'flex';
+                
+                // Enable Start Match button
+                startBtn.style.display = 'block';
+                
+                // Re-enable toss button in case they want to "best of 3" it
+                tossBtn.disabled = false;
+                tossBtn.innerText = "Re-Toss";
+            }, 1500);
+        }
+
+        function startMatch() {
+            if (!actualTossWinnerKey) {
+                alert("Please toss the coin first!");
+                return;
+            }
+
+            let tA = document.getElementById('teamA').value.trim() || 'Team 1';
+            let tB = document.getElementById('teamB').value.trim() || 'Team 2';
+            let overs = parseInt(document.getElementById('setup-overs').value) || 5;
+            let wickets = parseInt(document.getElementById('setup-wickets').value) || 10;
+            
+            let tossDecision = document.getElementById('toss-decision').value;
+            let tossWinnerName = actualTossWinnerKey === 'teamA' ? tA : tB;
+            
+            let batFirst, bowlFirst;
+
+            // Logic to determine who bats first
+            if (actualTossWinnerKey === 'teamA') {
+                if (tossDecision === 'bat') { batFirst = tA; bowlFirst = tB; }
+                else { batFirst = tB; bowlFirst = tA; }
+            } else {
+                if (tossDecision === 'bat') { batFirst = tB; bowlFirst = tA; }
+                else { batFirst = tA; bowlFirst = tB; }
+            }
+
+            state = {
+                matchStarted: true,
+                batFirst: batFirst,
+                bowlFirst: bowlFirst,
+                tossString: `${tossWinnerName} chose to ${tossDecision}`,
+                maxOvers: overs,
+                maxWickets: wickets,
+                innings: 1,
+                i1: { runs: 0, wickets: 0, validBalls: 0 },
+                i2: { runs: 0, wickets: 0, validBalls: 0 },
+                history: []
+            };
+            
+            saveState();
+            updateUI();
+        }
+
+        function addEvent(runsToAdd, isLegalBall, wicketsToAdd) {
+            let snapshot = JSON.parse(JSON.stringify(state));
+            snapshot.history = []; 
+            state.history.push(snapshot);
+
+            let current = state.innings === 1 ? state.i1 : state.i2;
+            current.runs += runsToAdd;
+            current.wickets += wicketsToAdd;
+            if (isLegalBall) current.validBalls++;
+            
+            if (current.wickets > state.maxWickets) current.wickets = state.maxWickets;
+
+            saveState();
+            updateUI();
+
+            if (state.innings === 1) {
+                let isAllOut = state.i1.wickets >= state.maxWickets;
+                let isOversDone = state.i1.validBalls >= (state.maxOvers * 6);
+                
+                if (isAllOut || isOversDone) {
+                    let reason = isAllOut ? "All Out" : "Overs Completed";
+                    setTimeout(() => {
+                        alert(`${state.batFirst} Innings Over (${reason})!\nTarget for ${state.bowlFirst} is ${state.i1.runs + 1}.`);
+                        switchInnings(true);
+                    }, 150);
+                }
+            }
+        }
+
+        function undo() {
+            if (state.history.length > 0) {
+                let previousState = state.history.pop();
+                let currentHistory = state.history;
+                state = previousState;
+                state.history = currentHistory;
+                saveState();
+                updateUI();
+            }
+        }
+
+        function switchInnings(isAutoSwitch) {
+            if (state.innings === 1) {
+                if (isAutoSwitch || confirm(`End innings early with a score of ${state.i1.runs}?`)) {
+                    let snapshot = JSON.parse(JSON.stringify(state));
+                    snapshot.history = [];
+                    state.history.push(snapshot);
+                    
+                    state.innings = 2;
+                    saveState();
+                    updateUI();
+                }
+            }
+        }
+
+        function resetApp() {
+            if(confirm("Start a brand new match? This will delete current data.")) {
+                localStorage.removeItem(STORAGE_KEY);
+                state = getInitialState();
+                actualTossWinnerKey = null; // Reset toss state
+                
+                // Reset setup UI
+                document.getElementById('decision-box').style.display = 'none';
+                document.getElementById('btn-start-match').style.display = 'none';
+                document.getElementById('toss-result-text').innerText = "Who will win the toss?";
+                document.getElementById('toss-result-text').style.color = "var(--primary)";
+                document.getElementById('btn-toss-action').innerText = "Flip Coin";
+                
+                updateUI();
+            }
+        }
+
+        function updateUI() {
+            let setupScreen = document.getElementById('setup-screen');
+            let boardScreen = document.getElementById('scoreboard-screen');
+
+            if (!state.matchStarted) {
+                setupScreen.style.display = 'flex';
+                boardScreen.style.display = 'none';
+                return;
+            } else {
+                setupScreen.style.display = 'none';
+                boardScreen.style.display = 'flex';
+            }
+
+            document.getElementById('match-rules').innerText = `${state.maxOvers} Overs | ${state.maxWickets} Wickets`;
+            document.getElementById('match-toss-result').innerText = `Toss: ${state.tossString}`;
+            document.getElementById('max-overs-display').innerText = state.maxOvers;
+
+            let current = state.innings === 1 ? state.i1 : state.i2;
+            let battingTeamName = state.innings === 1 ? state.batFirst : state.bowlFirst;
+            let matchOver = false;
+            
+            document.getElementById('batting-team').innerText = battingTeamName + " Batting";
+            document.getElementById('runs').innerText = current.runs;
+            document.getElementById('wickets').innerText = current.wickets;
+            
+            let completedOvers = Math.floor(current.validBalls / 6);
+            let currentOverBalls = current.validBalls % 6;
+            document.getElementById('overs').innerText = `${completedOvers}.${currentOverBalls}`;
+
+            let targetBox = document.getElementById('target-box');
+            let targetText = document.getElementById('target-info');
+            let progressBar = document.getElementById('progress-bar');
+            let switchBtn = document.getElementById('btn-switch');
+
+            if (state.innings === 2) {
+                let target = state.i1.runs + 1;
+                let runsNeeded = target - state.i2.runs;
+                
+                let progressPercent = (state.i2.runs / target) * 100;
+                if (progressPercent > 100) progressPercent = 100;
+                progressBar.style.width = `${progressPercent}%`;
+
+                let isAllOut = state.i2.wickets >= state.maxWickets;
+                let isOversDone = state.i2.validBalls >= (state.maxOvers * 6);
+
+                if (runsNeeded <= 0) {
+                    targetText.innerText = `🏆 ${state.bowlFirst} Won!`;
+                    targetText.style.color = "var(--primary)";
+                    progressBar.style.backgroundColor = "var(--primary)";
+                    matchOver = true;
+                } else if (isAllOut || isOversDone) {
+                    if (runsNeeded === 1) {
+                        targetText.innerText = `🤝 Match Tied!`;
+                    } else {
+                        targetText.innerText = `🏆 ${state.batFirst} Won by ${runsNeeded - 1} runs!`;
+                    }
+                    targetText.style.color = "var(--danger)";
+                    progressBar.style.backgroundColor = "var(--danger)";
+                    matchOver = true;
+                } else {
+                    let ballsRemaining = (state.maxOvers * 6) - state.i2.validBalls;
+                    targetText.innerText = `Need ${runsNeeded} runs in ${ballsRemaining} balls`;
+                    targetText.style.color = "var(--warning)";
+                    progressBar.style.backgroundColor = "var(--warning)";
+                }
+                
+                targetBox.style.display = 'block';
+                switchBtn.style.display = 'none'; 
+            } else {
+                targetBox.style.display = 'none';
+                switchBtn.style.display = 'block';
+            }
+
+            const controlButtons = document.querySelectorAll('#scoring-controls button');
+            controlButtons.forEach(btn => {
+                btn.disabled = matchOver;
+            });
+        }
+
+        updateUI();
+    </script>
+</body>
+</html>
